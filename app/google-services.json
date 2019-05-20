@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "801461140283",
+    "firebase_url": "https://chatmessenger-a3fda.firebaseio.com",
+    "project_id": "chatmessenger-a3fda",
+    "storage_bucket": "chatmessenger-a3fda.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:801461140283:android:a31c872a184a0872",
+        "android_client_info": {
+          "package_name": "com.example.chatmessenger"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "801461140283-qjb945ch3ni42aodh936a1eafkna92f1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCb7_JgTavX4Y1ezRXnUfZbWK2-jpIRaC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "801461140283-qjb945ch3ni42aodh936a1eafkna92f1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
