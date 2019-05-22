@@ -6,13 +6,30 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".LatestMessagesActivity">
+    <android.support.v7.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?android:attr/actionBarSize"
+            android:id="@+id/toolbarMain">
+    </android.support.v7.widget.Toolbar>
 
     <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/recycler_latestchat"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager">
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+    android:layout_marginTop="40dp">
 
     </android.support.v7.widget.RecyclerView>
-
+    <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            app:backgroundTint="@color/BlueDark"
+            android:layout_margin="20dp"
+            app:srcCompat="@drawable/compose"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            />
 </RelativeLayout>

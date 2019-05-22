@@ -13,6 +13,11 @@ import com.example.chatmessenger.Model.ChatMessage
 import com.example.chatmessenger.Model.Users
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.mikepenz.materialdrawer.AccountHeaderBuilder
+import com.mikepenz.materialdrawer.DrawerBuilder
+import com.mikepenz.materialdrawer.model.DividerDrawerItem
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.ViewHolder
 import kotlinx.android.synthetic.main.activity_latest_messages.*
@@ -27,6 +32,49 @@ class LatestMessagesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_latest_messages)
 
+
+
+        val headerResult = AccountHeaderBuilder()
+            .withActivity(this)
+            .withHeaderBackground(R.drawable.header)
+            .addProfiles(
+                ProfileDrawerItem().withName(currentuser?.username).withEmail(currentuser?.email).withIcon(
+                    resources.getDrawable(
+                        R.drawable.user
+                    )
+                )
+            )
+            .withOnAccountHeaderListener { _, _, _ -> false }
+            .build()
+
+        val item2 = PrimaryDrawerItem().withIdentifier(1).withName("Add More Pokemons!")
+
+//create the drawer and remember the `Drawer` result object
+        val result = DrawerBuilder()
+            .withActivity(this)
+            .withAccountHeader(headerResult)
+            .withToolbar(toolbarMain)
+            .addDrawerItems(
+                DividerDrawerItem(),
+                item2
+            )
+            .withOnDrawerItemClickListener { _, _, drawerItem ->
+                if (drawerItem != null) {
+                    var intent: Intent? = null
+                    if (drawerItem.identifier == 1L) {
+                        intent = Intent(this, NewMessageActivity::class.java)
+                    }
+                    if (intent != null) {
+                        this@LatestMessagesActivity.startActivity(intent)
+                    }
+                }
+
+
+                false
+            }
+            .build()
+
+
         recycler_latestchat.adapter = adapter
         recycler_latestchat.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         
@@ -38,6 +86,10 @@ class LatestMessagesActivity : AppCompatActivity() {
             intent.putExtra("userdata",row.chatpartner)
             startActivity(intent)
 
+        }
+        fab.setOnClickListener {
+            val intent = Intent(this, NewMessageActivity::class.java)
+            startActivity(intent)
         }
 
         listenforlatestmessage()
@@ -97,7 +149,7 @@ class LatestMessagesActivity : AppCompatActivity() {
 
     private fun verifyuserlogin() {
         val uid = FirebaseAuth.getInstance().uid
-        Toast.makeText(this, uid, Toast.LENGTH_LONG).show()
+//        Toast.makeText(this, uid, Toast.LENGTH_LONG).show()
         if(uid == null){
             val intent = Intent(this, RegisterActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -105,25 +157,25 @@ class LatestMessagesActivity : AppCompatActivity() {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item?.itemId){
-            R.id.menu_newmessaage ->
-            {
-                val intent = Intent(this, NewMessageActivity::class.java)
-                startActivity(intent)
-            }
-            R.id.menu_signout ->
-            {
-                FirebaseAuth.getInstance().signOut()
-                val intent = Intent(this, RegisterActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.nav_menu, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
+//    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+//        when(item?.itemId){
+//            R.id.menu_newmessaage ->
+//            {
+//                val intent = Intent(this, NewMessageActivity::class.java)
+//                startActivity(intent)
+//            }
+//            R.id.menu_signout ->
+//            {
+//                FirebaseAuth.getInstance().signOut()
+//                val intent = Intent(this, RegisterActivity::class.java)
+//                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                startActivity(intent)
+//            }
+//        }
+//        return super.onOptionsItemSelected(item)
+//    }
+//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+//        menuInflater.inflate(R.menu.nav_menu, menu)
+//        return super.onCreateOptionsMenu(menu)
+//    }
 }
