@@ -5,12 +5,16 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.example.chatmessenger.Adapter.LatestMessage
 import com.example.chatmessenger.Model.ChatMessage
 import com.example.chatmessenger.Model.Users
@@ -46,11 +50,11 @@ class ChatListFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
+
     companion object {
         var currentuser: Users? = null
     }
-    val adapter = GroupAdapter<ViewHolder>()
-    val messagemap = HashMap<String, ChatMessage?>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,43 +69,46 @@ class ChatListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
+        val chatlist = inflater.inflate(R.layout.fragment_chat_list, container, false)
         Paper.init(this@ChatListFragment.context)
         currentuser = Paper.book().read<Users>("user")
+        verifyuserlogin()
 
-        if (currentuser == null) {
+        listenforlatestmessage()
 
-            verifyuserlogin()
+        var recyclerlatestchat = chatlist.findViewById(R.id.recycler_chat) as? RecyclerView
+        recyclerlatestchat?.layoutManager = LinearLayoutManager(activity)
+        Toast.makeText(this@ChatListFragment.context, "haaa",Toast.LENGTH_LONG).show()
 
-        } else {
 
-            authenticateUser()
+        recyclerlatestchat?.addItemDecoration(
+            DividerItemDecoration(
+                this@ChatListFragment.context,
+                DividerItemDecoration.VERTICAL
+            )
+        )
 
-            recycler_latestchat.adapter = adapter
-            recycler_latestchat.addItemDecoration(DividerItemDecoration(this@ChatListFragment.context, DividerItemDecoration.VERTICAL))
+        adapter.setOnItemClickListener { item, view ->
+            //            val useritem = item as ContactItem
+            val intent = Intent(view.context, ChatLogActivity::class.java)
+            val row = item as LatestMessage
 
-            adapter.setOnItemClickListener { item, view ->
-                //            val useritem = item as ContactItem
-                val intent = Intent(view.context, ChatLogActivity::class.java)
-                val row = item as LatestMessage
+            intent.putExtra("userdata", row.chatpartner)
+            startActivity(intent)
 
-                intent.putExtra("userdata", row.chatpartner)
-                startActivity(intent)
-
-            }
-            fab.setOnClickListener {
-                val intent = Intent(this@ChatListFragment.context, NewMessageActivity::class.java)
-                startActivity(intent)
-            }
-
-            listenforlatestmessage()
-
+        }
+        var fab = chatlist.findViewById(R.id.fab) as FloatingActionButton
+        fab.setOnClickListener {
+            val intent = Intent(this@ChatListFragment.context, NewMessageActivity::class.java)
+            startActivity(intent)
         }
 
 
 
-        return inflater.inflate(R.layout.fragment_chat_list, container, false)
-
+        return chatlist
     }
+
+    val messagemap = HashMap<String, ChatMessage?>()
 
     private fun listenforlatestmessage() {
         val fromid = FirebaseAuth.getInstance().uid
@@ -111,12 +118,14 @@ class ChatListFragment : Fragment() {
                 val chatmessage = p0.getValue(ChatMessage::class.java)
                 messagemap[p0.key!!] = chatmessage
                 refreshrecyclerviewmessage()
+                recycler_latestchat.adapter = adapter
             }
 
             override fun onChildChanged(p0: DataSnapshot, p1: String?) {
                 val chatmessage = p0.getValue(ChatMessage::class.java)
                 messagemap[p0.key!!] = chatmessage
                 refreshrecyclerviewmessage()
+                recycler_latestchat.adapter = adapter
             }
 
             override fun onChildMoved(p0: DataSnapshot, p1: String?) {
@@ -130,20 +139,19 @@ class ChatListFragment : Fragment() {
         })
 
     }
-    private fun authenticateUser() {
-        val user = FirebaseAuth.getInstance().currentUser
-        val credential = EmailAuthProvider
-            .getCredential(currentuser!!.email, currentuser!!.password)
 
-        user?.reauthenticate(credential)
-            ?.addOnCompleteListener { }
-    }
+
+
     private fun refreshrecyclerviewmessage() {
         adapter.clear()
+        Toast.makeText(this@ChatListFragment.context, "refresh",Toast.LENGTH_LONG).show()
         messagemap.values.forEach {
             adapter.add(LatestMessage(it))
         }
+
     }
+
+    val adapter = GroupAdapter<ViewHolder>()
     private fun verifyuserlogin() {
 
         val uid = FirebaseAuth.getInstance().uid
@@ -153,6 +161,7 @@ class ChatListFragment : Fragment() {
             startActivity(intent)
         }
     }
+
     private fun showDialog() {
         lateinit var dialog: AlertDialog
         val builder = AlertDialog.Builder(this@ChatListFragment.context!!)
@@ -184,6 +193,7 @@ class ChatListFragment : Fragment() {
         dialog = builder.create()
         dialog.show()
     }
+
     private fun deletedatafromdatabase() {
         val uid = FirebaseAuth.getInstance().uid
         val ref = FirebaseDatabase.getInstance().getReference("Users").child(uid.toString())
@@ -191,37 +201,25 @@ class ChatListFragment : Fragment() {
     }
 
 
-
-    // TODO: Rename method, update argument and hook method into UI event
     fun onButtonPressed(uri: Uri) {
         listener?.onFragmentInteraction(uri)
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
-        }
-    }
+//    override fun onAttach(context: Context) {
+//        super.onAttach(context)
+//        if (context is OnFragmentInteractionListener) {
+//            listener = context
+//        } else {
+//            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+//        }
+//    }
 
     override fun onDetach() {
         super.onDetach()
         listener = null
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
+
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         fun onFragmentInteraction(uri: Uri)

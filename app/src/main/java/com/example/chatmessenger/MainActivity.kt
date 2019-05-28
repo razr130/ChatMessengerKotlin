@@ -3,36 +3,14 @@ package com.example.chatmessenger
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v7.widget.DividerItemDecoration
-import android.widget.Toast
-import com.example.chatmessenger.Adapter.LatestMessage
-import com.example.chatmessenger.Model.ChatMessage
-import com.example.chatmessenger.Model.Users
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
-import com.mikepenz.materialdrawer.AccountHeaderBuilder
-import com.mikepenz.materialdrawer.DrawerBuilder
-import com.mikepenz.materialdrawer.model.DividerDrawerItem
-import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.ProfileDrawerItem
-import com.xwray.groupie.GroupAdapter
-import com.xwray.groupie.ViewHolder
+
 import kotlinx.android.synthetic.main.activity_main.*
-import com.squareup.picasso.Picasso
-import android.graphics.drawable.Drawable
-import android.net.Uri
-import android.text.TextUtils
-import android.widget.ImageView
-import com.example.chatmessenger.Prevalent.onlineuser
-import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
-import com.mikepenz.materialdrawer.util.DrawerImageLoader
-import io.paperdb.Paper
-import android.support.v7.app.AlertDialog
-import android.content.DialogInterface
 import android.support.design.widget.BottomNavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentTransaction
+import android.support.v7.widget.RecyclerView
 import com.google.firebase.auth.EmailAuthProvider
+import kotlinx.android.synthetic.main.toolbar.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -41,9 +19,12 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.nav_chat -> {
                 setfragments(ChatListFragment())
+                TxtToolbarTitle.setText("Chat")
                 return@OnNavigationItemSelectedListener true
             }
             R.id.nav_friend -> {
+                setfragments(FriendFragment())
+                TxtToolbarTitle.setText("Friend List")
                 return@OnNavigationItemSelectedListener true
             }
             R.id.nav_setting -> {
@@ -57,6 +38,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+
+        main_bottom_navbar.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
+        setfragments(ChatListFragment())
 
     }
 

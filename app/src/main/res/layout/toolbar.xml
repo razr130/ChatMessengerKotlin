@@ -6,7 +6,7 @@
 >
 
     <TextView android:layout_width="match_parent" android:layout_height="match_parent"
-              android:id="@+id/TxtTolbarTitle"
+              android:id="@+id/TxtToolbarTitle"
               android:text="Title"
               android:textStyle="bold"
               android:textSize="25sp"
