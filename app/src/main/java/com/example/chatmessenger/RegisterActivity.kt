@@ -10,9 +10,14 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import com.example.chatmessenger.Model.Users
+import com.example.chatmessenger.Prevalent.onlineuser
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import io.paperdb.Paper
 import kotlinx.android.synthetic.main.activity_register.*
 import java.util.*
 
@@ -22,7 +27,7 @@ class RegisterActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-
+        Paper.init(this)
         BtnRegis.setOnClickListener {
             regisuser()
         }
@@ -68,12 +73,15 @@ class RegisterActivity : AppCompatActivity() {
                 } else {
                     Toast.makeText(this, "Registration succesfull. UID: ${it.result?.user?.uid}", Toast.LENGTH_SHORT)
                         .show()
+
                     uploadimage()
                 }
             }.addOnFailureListener {
                 Log.d("Main", "Failed to create user : ${it.message}")
             }
     }
+
+
 
     private fun uploadimage() {
 
@@ -108,16 +116,35 @@ class RegisterActivity : AppCompatActivity() {
         ref.setValue(user)
             .addOnSuccessListener {
                 Toast.makeText(this, "success adding to database", Toast.LENGTH_LONG).show()
-                openlatestmessage()
+                writeuserdata()
+
             }
             .addOnFailureListener {
                 Toast.makeText(this, "error adding to database", Toast.LENGTH_LONG).show()
             }
     }
+    private fun writeuserdata() {
+        val uid = FirebaseAuth.getInstance().uid
+        val ref = FirebaseDatabase.getInstance().getReference("Users").child(uid.toString())
 
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(p0: DataSnapshot) {
+
+                onlineuser = p0.getValue(Users::class.java)
+                Toast.makeText(this@RegisterActivity, "hello " + onlineuser?.username, Toast.LENGTH_SHORT)
+                    .show()
+                Paper.book().write("user", onlineuser)
+                openlatestmessage()
+            }
+
+            override fun onCancelled(p0: DatabaseError) {
+            }
+        })
+    }
     private fun openlatestmessage() {
         val intent = Intent(this, LatestMessagesActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+
         startActivity(intent)
     }
 }

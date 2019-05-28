@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".EditProfileActivity">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/user"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:id="@+id/pic_edit"
+    />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:id="@+id/TxtChangePic"
+              android:layout_below="@id/pic_edit"
+              android:layout_centerHorizontal="true"
+              android:text="Click to Change Profile Picture"
+              android:textStyle="italic"
+              android:textSize="12sp"
+              android:layout_marginTop="10dp"
+    />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:id="@+id/TxtUsernameTitle"
+              android:layout_below="@id/TxtChangePic"
+              android:layout_centerHorizontal="true"
+              android:text="Username"
+              android:textSize="18sp"
+              android:textColor="@color/BlueDark"
+              android:layout_marginTop="50dp"
+    />
+    <EditText android:layout_width="match_parent" android:layout_height="70dp"
+              android:background="@drawable/rounded_edittext_withborder"
+              android:layout_below="@id/TxtUsernameTitle"
+              android:id="@+id/TxtUsernameEdit"
+              android:layout_marginLeft="30dp"
+              android:layout_marginRight="30dp"
+              android:layout_marginTop="10dp"
+              android:hint="Username"
+              android:paddingLeft="20dp"
+    />
+
+    <Button android:layout_width="match_parent" android:layout_height="50dp"
+            android:background="@drawable/rounded_button"
+            android:layout_below="@id/TxtUsernameEdit"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="40dp"
+            android:padding="15dp"
+            android:text="Edit"
+            android:textColor="@color/white"
+    />
+
+</RelativeLayout>

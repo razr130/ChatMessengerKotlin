@@ -9,6 +9,8 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
+        <activity android:name=".EditProfileActivity">
+        </activity>
         <activity android:name=".ChatLogActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
@@ -19,8 +21,9 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value=".LatestMessagesActivity"/>
         </activity>
-        <activity android:name=".LatestMessagesActivity"
-                  android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity
+                android:name=".LatestMessagesActivity"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -30,12 +33,10 @@
         <activity
                 android:name=".LoginActivity"
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
         </activity>
         <activity
                 android:name=".RegisterActivity"
                 android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
         </activity>
     </application>
 

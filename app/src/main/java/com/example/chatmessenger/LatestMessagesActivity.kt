@@ -21,6 +21,21 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.ViewHolder
 import kotlinx.android.synthetic.main.activity_latest_messages.*
+import com.squareup.picasso.Picasso
+import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.text.TextUtils
+import android.widget.ImageView
+import com.example.chatmessenger.Prevalent.onlineuser
+import com.mikepenz.materialdrawer.AccountHeader
+import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
+import com.mikepenz.materialdrawer.util.DrawerImageLoader
+import io.paperdb.Paper
+import android.support.v7.app.AlertDialog
+import android.content.DialogInterface
+import android.util.Log
+import com.google.firebase.auth.EmailAuthProvider
+
 
 class LatestMessagesActivity : AppCompatActivity() {
 
@@ -32,69 +47,160 @@ class LatestMessagesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_latest_messages)
 
+        Paper.init(this)
+        currentuser = Paper.book().read<Users>("user")
+        if (currentuser == null) {
+            verifyuserlogin()
+            //Toast.makeText(this, "taraaaiaiaiaiai", Toast.LENGTH_LONG).show()
+        } else {
+            //Toast.makeText(this, "taraaaoaoaoaoa", Toast.LENGTH_LONG).show()
 
+            authenticateUser()
 
-        val headerResult = AccountHeaderBuilder()
-            .withActivity(this)
-            .withHeaderBackground(R.drawable.header)
-            .addProfiles(
-                ProfileDrawerItem().withName(currentuser?.username).withEmail(currentuser?.email).withIcon(
-                    resources.getDrawable(
-                        R.drawable.user
+            if (currentuser!!.username != "" && currentuser!!.email != "" && currentuser!!.image != "") {
+                if (!TextUtils.isEmpty(currentuser!!.username) && !TextUtils.isEmpty(currentuser!!.email) && !TextUtils.isEmpty(
+                        currentuser!!.image
                     )
-                )
-            )
-            .withOnAccountHeaderListener { _, _, _ -> false }
-            .build()
+                ) {
+                    //Toast.makeText(this, "taraaa", Toast.LENGTH_LONG).show()
+                    DrawerImageLoader.init(object : AbstractDrawerImageLoader() {
+                        override fun set(imageView: ImageView?, uri: Uri?, placeholder: Drawable?) {
+                            Picasso.get().load(uri).placeholder(placeholder!!).into(imageView)
+                        }
 
-        val item2 = PrimaryDrawerItem().withIdentifier(1).withName("Add More Pokemons!")
+                        override fun cancel(imageView: ImageView?) {
+                            Picasso.get().cancelRequest(imageView!!)
+                        }
 
-//create the drawer and remember the `Drawer` result object
-        val result = DrawerBuilder()
-            .withActivity(this)
-            .withAccountHeader(headerResult)
-            .withToolbar(toolbarMain)
-            .addDrawerItems(
-                DividerDrawerItem(),
-                item2
-            )
-            .withOnDrawerItemClickListener { _, _, drawerItem ->
-                if (drawerItem != null) {
-                    var intent: Intent? = null
-                    if (drawerItem.identifier == 1L) {
-                        intent = Intent(this, NewMessageActivity::class.java)
+                    })
+                    //Toast.makeText(this, "making header with data", Toast.LENGTH_LONG).show()
+                    val headerResult = AccountHeaderBuilder()
+                        .withActivity(this)
+                        .withHeaderBackground(R.drawable.header)
+                        .addProfiles(
+
+                            ProfileDrawerItem().withName(currentuser!!.username).withEmail(currentuser!!.email).withIcon(
+                                currentuser!!.image
+                            ).withIdentifier(100)
+                        )
+                        .withOnAccountHeaderListener { _, _, _ -> false }
+                        .build()
+
+                    val item2 = PrimaryDrawerItem().withIdentifier(1).withName("Edit Profile")
+                    val item3 = PrimaryDrawerItem().withIdentifier(2).withName("Sign Out")
+                    val item4 = PrimaryDrawerItem().withIdentifier(3).withName("Delete Account")
+
+                    val result = DrawerBuilder()
+                        .withActivity(this)
+                        .withAccountHeader(headerResult)
+                        .withToolbar(toolbarMain)
+                        .addDrawerItems(
+
+                            item2,
+                            DividerDrawerItem(),
+                            item4,
+                            item3
+                        )
+                        .withOnDrawerItemClickListener { _, _, drawerItem ->
+                            if (drawerItem != null) {
+                                var intent: Intent? = null
+                                if (drawerItem.identifier == 1L) {
+                                    intent = Intent(this, EditProfileActivity::class.java)
+                                } else if (drawerItem.identifier == 2L) {
+                                    FirebaseAuth.getInstance().signOut()
+                                    val intent = Intent(this, LoginActivity::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(intent)
+                                    onlineuser = null
+                                    Paper.book().destroy()
+                                } else if (drawerItem.identifier == 3L) {
+                                    showDialog()
+
+                                }
+                                if (intent != null) {
+                                    this@LatestMessagesActivity.startActivity(intent)
+                                }
+                            }
+                            false
+                        }
+                        .build()
+
+
+                    recycler_latestchat.adapter = adapter
+                    recycler_latestchat.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+
+                    adapter.setOnItemClickListener { item, view ->
+                        //            val useritem = item as ContactItem
+                        val intent = Intent(view.context, ChatLogActivity::class.java)
+                        val row = item as LatestMessage
+
+                        intent.putExtra("userdata", row.chatpartner)
+                        startActivity(intent)
+
                     }
-                    if (intent != null) {
-                        this@LatestMessagesActivity.startActivity(intent)
+                    fab.setOnClickListener {
+                        val intent = Intent(this, NewMessageActivity::class.java)
+                        startActivity(intent)
                     }
+
+                    listenforlatestmessage()
                 }
-
-
-                false
             }
-            .build()
-
-
-        recycler_latestchat.adapter = adapter
-        recycler_latestchat.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-        
-        adapter.setOnItemClickListener { item, view ->
-//            val useritem = item as ContactItem
-            val intent = Intent(view.context, ChatLogActivity::class.java)
-            val row = item as LatestMessage
-
-            intent.putExtra("userdata",row.chatpartner)
-            startActivity(intent)
-
+            else{
+                Toast.makeText(this, "data empty?", Toast.LENGTH_LONG).show()
+            }
         }
-        fab.setOnClickListener {
-            val intent = Intent(this, NewMessageActivity::class.java)
-            startActivity(intent)
+    }
+
+
+    private fun authenticateUser() {
+        val user = FirebaseAuth.getInstance().currentUser
+
+
+        val credential = EmailAuthProvider
+            .getCredential(currentuser!!.email, currentuser!!.password)
+
+        user?.reauthenticate(credential)
+            ?.addOnCompleteListener { }
+    }
+
+
+    private fun showDialog() {
+        lateinit var dialog: AlertDialog
+        val builder = AlertDialog.Builder(this)
+
+        builder.setTitle("Delete User")
+        builder.setMessage("Are you sure you want to delete your account, " + currentuser?.username + "?")
+
+
+        val dialogClickListener = DialogInterface.OnClickListener { _, which ->
+            when (which) {
+                DialogInterface.BUTTON_POSITIVE -> {
+                    FirebaseAuth.getInstance().currentUser?.delete()
+                    deletedatafromdatabase()
+                    onlineuser = null
+                    Paper.book().destroy()
+                    val intent = Intent(this, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }
+                DialogInterface.BUTTON_NEGATIVE -> dialog.dismiss()
+                DialogInterface.BUTTON_NEUTRAL -> dialog.cancel()
+            }
         }
 
-        listenforlatestmessage()
-        fetchcurrentuser()
-        verifyuserlogin()
+        builder.setPositiveButton("YES", dialogClickListener)
+        builder.setNegativeButton("NO", dialogClickListener)
+        builder.setNeutralButton("CANCEL", dialogClickListener)
+
+        dialog = builder.create()
+        dialog.show()
+    }
+
+    private fun deletedatafromdatabase() {
+        val uid = FirebaseAuth.getInstance().uid
+        val ref = FirebaseDatabase.getInstance().getReference("Users").child(uid.toString())
+        ref.removeValue()
     }
 
     val messagemap = HashMap<String, ChatMessage?>()
@@ -102,80 +208,49 @@ class LatestMessagesActivity : AppCompatActivity() {
     private fun listenforlatestmessage() {
         val fromid = FirebaseAuth.getInstance().uid
         val ref = FirebaseDatabase.getInstance().getReference("Latest-Message").child(fromid.toString())
-        ref.addChildEventListener(object: ChildEventListener{
+        ref.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(p0: DataSnapshot, p1: String?) {
                 val chatmessage = p0.getValue(ChatMessage::class.java)
                 messagemap[p0.key!!] = chatmessage
                 refreshrecyclerviewmessage()
             }
+
             override fun onChildChanged(p0: DataSnapshot, p1: String?) {
                 val chatmessage = p0.getValue(ChatMessage::class.java)
                 messagemap[p0.key!!] = chatmessage
                 refreshrecyclerviewmessage()
             }
+
             override fun onChildMoved(p0: DataSnapshot, p1: String?) {
-
             }
+
             override fun onChildRemoved(p0: DataSnapshot) {
-
             }
-            override fun onCancelled(p0: DatabaseError) {
 
+            override fun onCancelled(p0: DatabaseError) {
             }
         })
     }
 
     private fun refreshrecyclerviewmessage() {
         adapter.clear()
-        messagemap.values.forEach{
-           adapter.add(LatestMessage(it))
+        messagemap.values.forEach {
+            adapter.add(LatestMessage(it))
         }
     }
 
     val adapter = GroupAdapter<ViewHolder>()
-    private fun fetchcurrentuser() {
-        val uid = FirebaseAuth.getInstance().uid
-        val ref = FirebaseDatabase.getInstance().getReference("Users").child(uid.toString())
-        ref.addListenerForSingleValueEvent(object: ValueEventListener{
-            override fun onDataChange(p0: DataSnapshot) {
-                currentuser = p0.getValue(Users::class.java)
-            }
 
-            override fun onCancelled(p0: DatabaseError) {
-
-            }
-        })
-    }
 
     private fun verifyuserlogin() {
         val uid = FirebaseAuth.getInstance().uid
+        //Toast.makeText(this, "verivy user", Toast.LENGTH_LONG).show()
 //        Toast.makeText(this, uid, Toast.LENGTH_LONG).show()
-        if(uid == null){
-            val intent = Intent(this, RegisterActivity::class.java)
+        if (uid == null) {
+            val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         }
     }
 
-//    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-//        when(item?.itemId){
-//            R.id.menu_newmessaage ->
-//            {
-//                val intent = Intent(this, NewMessageActivity::class.java)
-//                startActivity(intent)
-//            }
-//            R.id.menu_signout ->
-//            {
-//                FirebaseAuth.getInstance().signOut()
-//                val intent = Intent(this, RegisterActivity::class.java)
-//                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                startActivity(intent)
-//            }
-//        }
-//        return super.onOptionsItemSelected(item)
-//    }
-//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-//        menuInflater.inflate(R.menu.nav_menu, menu)
-//        return super.onCreateOptionsMenu(menu)
-//    }
 }
