@@ -6,4 +6,5 @@
     <color name="BlueLight">#81cfe0</color>
     <color name="BlueDark">#3498db</color>
     <color name="white">#ffffff</color>
+    <color name="greyish">#3d3d3d</color>
 </resources>

@@ -2,13 +2,11 @@ package com.example.chatmessenger
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import com.example.chatmessenger.Adapter.ChatFromAdapter
 import com.example.chatmessenger.Adapter.ChatToAdapter
-import com.example.chatmessenger.LatestMessagesActivity.Companion.currentuser
+import com.example.chatmessenger.ChatListFragment.Companion.currentuser
 import com.example.chatmessenger.Model.ChatMessage
 import com.example.chatmessenger.Model.Users
-import com.example.chatmessenger.Prevalent.onlineuser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -74,7 +72,7 @@ class ChatLogActivity : AppCompatActivity() {
 //                Toast.makeText(this@ChatLogActivity,"id to : " + touser?.uid, Toast.LENGTH_LONG).show()
                 if(chat != null){
                     if(chat.formId == FirebaseAuth.getInstance().uid){
-                        //val currentuser = LatestMessagesActivity.currentuser
+                        //val currentuser = MainActivity.currentuser
                         adapter.add(ChatToAdapter(chat.text, currentuser!!))
                     }
                     else

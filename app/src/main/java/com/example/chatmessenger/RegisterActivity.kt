@@ -2,7 +2,6 @@ package com.example.chatmessenger
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -142,7 +141,7 @@ class RegisterActivity : AppCompatActivity() {
         })
     }
     private fun openlatestmessage() {
-        val intent = Intent(this, LatestMessagesActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         startActivity(intent)

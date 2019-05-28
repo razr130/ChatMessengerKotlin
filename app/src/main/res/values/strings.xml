@@ -3,4 +3,7 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="nav_chat">Chats</string>
+    <string name="nav_friend">Friends List</string>
+    <string name="nav_setting">Settings</string>
 </resources>

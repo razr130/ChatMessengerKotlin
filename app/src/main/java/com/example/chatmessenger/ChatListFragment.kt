@@ -1,12 +1,30 @@
 package com.example.chatmessenger
 
 import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.app.AlertDialog
+import android.support.v7.widget.DividerItemDecoration
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.example.chatmessenger.Adapter.LatestMessage
+import com.example.chatmessenger.Model.ChatMessage
+import com.example.chatmessenger.Model.Users
+import com.example.chatmessenger.Prevalent.onlineuser
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.xwray.groupie.GroupAdapter
+import com.xwray.groupie.ViewHolder
+import io.paperdb.Paper
+import kotlinx.android.synthetic.main.fragment_chat_list.*
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -28,6 +46,11 @@ class ChatListFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
+    companion object {
+        var currentuser: Users? = null
+    }
+    val adapter = GroupAdapter<ViewHolder>()
+    val messagemap = HashMap<String, ChatMessage?>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,9 +64,133 @@ class ChatListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+
+        Paper.init(this@ChatListFragment.context)
+        currentuser = Paper.book().read<Users>("user")
+
+        if (currentuser == null) {
+
+            verifyuserlogin()
+
+        } else {
+
+            authenticateUser()
+
+            recycler_latestchat.adapter = adapter
+            recycler_latestchat.addItemDecoration(DividerItemDecoration(this@ChatListFragment.context, DividerItemDecoration.VERTICAL))
+
+            adapter.setOnItemClickListener { item, view ->
+                //            val useritem = item as ContactItem
+                val intent = Intent(view.context, ChatLogActivity::class.java)
+                val row = item as LatestMessage
+
+                intent.putExtra("userdata", row.chatpartner)
+                startActivity(intent)
+
+            }
+            fab.setOnClickListener {
+                val intent = Intent(this@ChatListFragment.context, NewMessageActivity::class.java)
+                startActivity(intent)
+            }
+
+            listenforlatestmessage()
+
+        }
+
+
+
         return inflater.inflate(R.layout.fragment_chat_list, container, false)
+
     }
+
+    private fun listenforlatestmessage() {
+        val fromid = FirebaseAuth.getInstance().uid
+        val ref = FirebaseDatabase.getInstance().getReference("Latest-Message").child(fromid.toString())
+        ref.addChildEventListener(object : ChildEventListener {
+            override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+                val chatmessage = p0.getValue(ChatMessage::class.java)
+                messagemap[p0.key!!] = chatmessage
+                refreshrecyclerviewmessage()
+            }
+
+            override fun onChildChanged(p0: DataSnapshot, p1: String?) {
+                val chatmessage = p0.getValue(ChatMessage::class.java)
+                messagemap[p0.key!!] = chatmessage
+                refreshrecyclerviewmessage()
+            }
+
+            override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+            }
+
+            override fun onChildRemoved(p0: DataSnapshot) {
+            }
+
+            override fun onCancelled(p0: DatabaseError) {
+            }
+        })
+
+    }
+    private fun authenticateUser() {
+        val user = FirebaseAuth.getInstance().currentUser
+        val credential = EmailAuthProvider
+            .getCredential(currentuser!!.email, currentuser!!.password)
+
+        user?.reauthenticate(credential)
+            ?.addOnCompleteListener { }
+    }
+    private fun refreshrecyclerviewmessage() {
+        adapter.clear()
+        messagemap.values.forEach {
+            adapter.add(LatestMessage(it))
+        }
+    }
+    private fun verifyuserlogin() {
+
+        val uid = FirebaseAuth.getInstance().uid
+        if (uid == null) {
+            val intent = Intent(this@ChatListFragment.context, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        }
+    }
+    private fun showDialog() {
+        lateinit var dialog: AlertDialog
+        val builder = AlertDialog.Builder(this@ChatListFragment.context!!)
+
+        builder.setTitle("Delete User")
+        builder.setMessage("Are you sure you want to delete your account, " + currentuser?.username + "?")
+
+
+        val dialogClickListener = DialogInterface.OnClickListener { _, which ->
+            when (which) {
+                DialogInterface.BUTTON_POSITIVE -> {
+                    FirebaseAuth.getInstance().currentUser?.delete()
+                    deletedatafromdatabase()
+                    onlineuser = null
+                    Paper.book().destroy()
+                    val intent = Intent(this@ChatListFragment.context, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }
+                DialogInterface.BUTTON_NEGATIVE -> dialog.dismiss()
+                DialogInterface.BUTTON_NEUTRAL -> dialog.cancel()
+            }
+        }
+
+        builder.setPositiveButton("YES", dialogClickListener)
+        builder.setNegativeButton("NO", dialogClickListener)
+        builder.setNeutralButton("CANCEL", dialogClickListener)
+
+        dialog = builder.create()
+        dialog.show()
+    }
+    private fun deletedatafromdatabase() {
+        val uid = FirebaseAuth.getInstance().uid
+        val ref = FirebaseDatabase.getInstance().getReference("Users").child(uid.toString())
+        ref.removeValue()
+    }
+
+
 
     // TODO: Rename method, update argument and hook method into UI event
     fun onButtonPressed(uri: Uri) {
@@ -80,23 +227,5 @@ class ChatListFragment : Fragment() {
         fun onFragmentInteraction(uri: Uri)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ChatListFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ChatListFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
+
 }
